@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Заявка в поддержку Инфотех</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<!-- ===================== СТИЛИ ===================== -->
+<style>
+  :root { color-scheme: light; box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #f3f6fb; --card: #ffffff; --text: #1f2937; --muted: #6b7280; --border: #e3e8f0;
+    --accent: #2563eb; --accent-2: #1d4ed8; --soft: #eaf1ff; --error: #dc2626; --ok: #16a34a;
+    --shadow: 0 1px 2px rgba(16,24,40,.05), 0 8px 24px rgba(37,99,235,.07); }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--text); font: 16px/1.55 Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    background: radial-gradient(900px 340px at 85% -80px, #dbe7ff 0, transparent 70%), var(--bg); }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 32px 20px 56px; }
+  header.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
+  .badge { display: inline-block; font-size: 12px; font-weight: 600; color: var(--accent); background: var(--soft);
+    padding: 4px 12px; border-radius: 999px; margin-bottom: 10px; letter-spacing: .02em; }
+  h1 { margin: 0 0 8px; font-size: 32px; line-height: 1.2; font-weight: 700; letter-spacing: -.02em; }
+  .lead { margin: 0; color: var(--muted); max-width: 700px; }
+  h2 { font-size: 13px; margin: 0 0 14px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } h1 { font-size: 26px; } }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; box-shadow: var(--shadow); }
+
+  /* --- Форма --- */
+  .field { margin-bottom: 18px; }
+  label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  label .req { color: var(--error); }
+  input, select, textarea { width: 100%; font: inherit; color: var(--text); background: #fbfcfe;
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; transition: border-color .15s, box-shadow .15s; }
+  textarea { min-height: 110px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(37,99,235,.15); background: #fff; }
+  .invalid { border-color: var(--error) !important; }
+  .err-text { color: var(--error); font-size: 13px; margin-top: 4px; }
+
+  /* --- Кнопки --- */
+  button { font: inherit; cursor: pointer; border-radius: 10px; padding: 10px 18px; border: 1px solid var(--accent);
+    background: var(--accent); color: #fff; font-weight: 600; transition: background .15s, transform .05s; }
+  button:hover { background: var(--accent-2); }
+  button:active { transform: translateY(1px); }
+  button.ghost { background: #fff; color: var(--accent); }
+  button.ghost:hover { background: var(--soft); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .msg { margin-top: 12px; font-size: 14px; color: var(--error); }
+
+  /* --- Лист документа --- */
+  .paper { background: #fff; color: #000; border: 1px solid var(--border); border-radius: 6px;
+    box-shadow: 0 10px 30px rgba(31,41,55,.08); padding: 32px 36px; overflow-x: auto; }
+  .paper p, .paper div { margin: 0 0 6px; }
+  .ph { color: #8a93a3; font-style: italic; }
+
+  /* --- Админка и визуальный редактор --- */
+  #admin { display: none; margin-bottom: 24px; }
+  #admin.open { display: block; }
+  .admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .chk { display: flex; align-items: center; gap: 8px; }
+  .chk input { width: auto; } .chk label { margin: 0; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px; background: var(--soft);
+    border: 1px solid var(--border); border-bottom: 0; border-radius: 10px 10px 0 0; }
+  .toolbar button { padding: 6px 11px; background: #fff; color: var(--text); border-color: var(--border); font-weight: 600; }
+  .toolbar button:hover { background: #fff; border-color: var(--accent); color: var(--accent); }
+  .toolbar select { width: auto; padding: 6px 8px; }
+  .toolbar .sep { width: 1px; align-self: stretch; background: var(--border); margin: 0 4px; }
+  #editor { min-height: 300px; border-radius: 0 0 10px 10px; outline: none; }
+  #editor:focus { box-shadow: 0 0 0 4px rgba(37,99,235,.15); }
+  .tok { background: var(--soft); color: var(--accent); border: 1px dashed var(--accent); border-radius: 6px;
+    padding: 0 6px; font: 600 .85em Inter, Arial, sans-serif; font-style: normal; }
+
+  /* --- Уведомление --- */
+  #toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    background: var(--ok); color: #fff; padding: 11px 20px; border-radius: 999px; opacity: 0; pointer-events: none;
+    transition: opacity .25s; box-shadow: 0 8px 24px rgba(22,163,74,.3); }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <span class="badge">Инфотех · Техподдержка</span>
+      <h1>Заявка в поддержку Инфотех</h1>
+      <p class="lead">Часть данных уже заполнена по умолчанию: реквизиты договора, заказчик и контакты. Вам нужно внести только ключевые сведения — номер, дату, услугу и суть обращения.</p>
+    </div>
+    <button class="ghost" id="adminToggle" type="button">Админка</button>
+  </header>
+
+  <!-- ===================== БЛОК: АДМИНКА ===================== -->
+  <section id="admin" class="card" aria-label="Настройки форматирования">
+    <h2>Оформление документа</h2>
+    <div class="admin-grid" id="adminFields"><!-- поля создаются скриптом --></div>
+
+    <h2>Визуальный редактор шаблона</h2>
+    <!-- Панель инструментов: mousedown блокируем, чтобы не терять выделение в редакторе -->
+    <div class="toolbar" id="toolbar">
+      <button type="button" data-cmd="bold" title="Полужирный"><b>Ж</b></button>
+      <button type="button" data-cmd="italic" title="Курсив"><i>К</i></button>
+      <button type="button" data-cmd="underline" title="Подчёркнутый"><u>Ч</u></button>
+      <span class="sep"></span>
+      <button type="button" data-cmd="justifyLeft" title="По левому краю">⇤</button>
+      <button type="button" data-cmd="justifyCenter" title="По центру">↔</button>
+      <button type="button" data-cmd="justifyRight" title="По правому краю">⇥</button>
+      <button type="button" data-cmd="justifyFull" title="По ширине">☰</button>
+      <span class="sep"></span>
+      <select id="sizeSel" title="Размер текста"><option value="">Размер</option></select>
+      <span class="sep"></span>
+      <button type="button" data-tok="num">+ Номер</button>
+      <button type="button" data-tok="date">+ Дата</button>
+      <button type="button" data-tok="service">+ Услуга</button>
+      <button type="button" data-tok="desc">+ Описание</button>
+    </div>
+    <div class="paper" id="editor" contenteditable="true" spellcheck="false"></div>
+    <div class="actions">
+      <button type="button" id="adminSave">Сохранить</button>
+      <button type="button" class="ghost" id="adminReset">Сбросить к стандартному</button>
+      <button type="button" class="ghost" id="adminCopy">Копировать JSON</button>
+    </div>
+    <p class="msg" style="color:var(--muted)">Синие метки — места подстановки полей формы, их нельзя редактировать как текст, но можно переносить и удалять. Изменения сразу видны в предпросмотре. Настройки хранятся в браузере; чтобы сделать их общими, вставьте скопированный JSON в <code>DEFAULT_SETTINGS</code> в коде.</p>
+  </section>
+
+  <div class="grid">
+    <!-- ===================== БЛОК: ПРЕДПРОСМОТР ===================== -->
+    <section id="previewBlock">
+      <h2>Предварительный просмотр документа</h2>
+      <div class="paper" id="preview"></div>
+      <div class="actions">
+        <button type="button" id="btnDocx">Скачать в формате Word (.docx)</button>
+        <button type="button" id="btnPdf" class="ghost">Скачать в формате PDF</button>
+      </div>
+      <div class="msg" id="msg" role="alert"></div>
+    </section>
+
+    <!-- ===================== БЛОК: ФОРМА ===================== -->
+    <section id="formBlock" class="card">
+      <h2>Данные заявки</h2>
+      <div class="field">
+        <label for="num">Номер заявки <span class="req">*</span></label>
+        <input id="num" type="text" placeholder="Укажите номер заявки" autocomplete="off">
+        <div class="err-text" data-err="num"></div>
+      </div>
+      <div class="field">
+        <label for="date">Дата <span class="req">*</span></label>
+        <input id="date" type="date">
+        <div class="err-text" data-err="date"></div>
+      </div>
+      <div class="field">
+        <label for="service">Наименование услуги <span class="req">*</span></label>
+        <select id="service">
+          <option value="">Выберите услугу…</option>
+          <option>Сопровождение программного обеспечения серверов и шлюзов системы TicketNet: Консультации сертифицированного персонала</option>
+          <option>Сопровождение программного обеспечения серверов и шлюзов системы TicketNet: Администрирование серверов</option>
+          <option>Сопровождение программного обеспечения АРМ кассиров системы TicketNet: Консультации сертифицированного персонала</option>
+          <option>Сопровождение программного обеспечения АРМ кассиров системы TicketNet: Администрирование АРМ</option>
+          <option>Сопровождение программного обеспечения АРМ администраторов системы TicketNet: Консультации сертифицированного персонала</option>
+          <option>Сопровождение программного обеспечения АРМ администраторов системы TicketNet: Администрирование АРМ</option>
+          <option>Сопровождение программного обеспечения АРМ администраторов системы TicketNet: Поддержка шлюза передачи данных о мероприятиях для распространителей</option>
+        </select>
+        <div class="err-text" data-err="service"></div>
+      </div>
+      <div class="field">
+        <label for="desc">Краткое описание предмета заявки <span class="req">*</span></label>
+        <textarea id="desc" placeholder="Опишите кратко суть обращения"></textarea>
+        <div class="err-text" data-err="desc"></div>
+      </div>
+    </section>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+
+<!-- ===================== СКРИПТ ===================== -->
+<script>
+const $ = id => document.getElementById(id);
+const LBL = { num: 'Номер заявки', date: 'Дата', service: 'Наименование услуги', desc: 'Описание' };
+const MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+
+/* ---------- 1. Шаблон документа (HTML) и настройки ---------- */
+// Метка поля: нередактируемый «чип», на его место при рендере подставляется значение
+const chip = k => `<span class="tok" data-tok="${k}" contenteditable="false">${LBL[k]}</span>`;
+const P = (t, al, extra) => `<p style="text-align:${al};${extra || ''}">${t}</p>`;
+const IND = 'text-indent:10mm;';
+const DEFAULT_TPL =
+  P('<b>ЗАЯВКА № ' + chip('num') + '</b>', 'center', 'font-size:14pt;') +
+  P('к Договору от 01.12.2025 № 14068В', 'center') +
+  P('от ' + chip('date') + ' года', 'center') + P('<br>', 'left') +
+  P('1. Просим предоставить специалиста ООО «ИТ-Сервис» для оказания услуг договору на оказание услуг по поддержке функционирования программного обеспечения и технических средств системы резервирования и продажи билетов TicketNet от 01.12.2025 № 14068В.', 'justify', IND) +
+  P('2. Полное наименование организации-заказчика: Автономная некоммерческая организация «Культурный центр»', 'justify', IND) +
+  P('3. Наименование услуг: ' + chip('service'), 'justify', IND) +
+  P('4. Краткое описание предмета заявки: ' + chip('desc'), 'justify', IND) + P('<br>', 'left') +
+  P('Контактная информация (ответственное лицо, тел., e-mail): scou@sirius.online', 'left') +
+  P('Для подачи ЗАЯВКИ необходимо выслать данную заполненную форму в ООО «ИТ-Сервис» по факсу: (812)718-53-55 или эл.почте – supp@infotec.ru.', 'left');
+
+// Значения по умолчанию. Сюда можно вставить JSON из админки, чтобы настройки стали общими.
+const DEFAULT_SETTINGS = { fontFamily: 'Times New Roman', fontSize: 12, lineHeight: 1.15, marginMm: 20,
+  boldValues: false, emptyText: 'Не указано', tpl: DEFAULT_TPL };
+const ADMIN_PASSWORD = 'admin'; // лишь защита от случайного входа, не настоящая безопасность
+const STORE_KEY = 'zayavka-settings-v2';
+const ADMIN_SCHEMA = [
+  { k: 'fontFamily', l: 'Шрифт', t: 'select', o: ['Times New Roman', 'Arial', 'Calibri', 'Verdana'] },
+  { k: 'fontSize', l: 'Базовый размер, pt', t: 'number', min: 8, max: 20, step: 0.5 },
+  { k: 'lineHeight', l: 'Межстрочный интервал', t: 'number', min: 1, max: 2.5, step: 0.05 },
+  { k: 'marginMm', l: 'Поля страницы, мм', t: 'number', min: 10, max: 40, step: 1 },
+  { k: 'emptyText', l: 'Заглушка пустого поля', t: 'text' },
+  { k: 'boldValues', l: 'Значения полей полужирным', t: 'check' }
+];
+let settings = (() => { try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(STORE_KEY) || '{}') }; }
+  catch (e) { return { ...DEFAULT_SETTINGS }; } })();
+
+/* ---------- 2. Подстановка значений ---------- */
+const fmtDate = iso => { if (!iso) return ''; const [y, m, d] = iso.split('-').map(Number); return `${d} ${MONTHS[m - 1]} ${y}`; };
+const readValues = () => ({ num: $('num').value.trim(), date: fmtDate($('date').value),
+  service: $('service').value, desc: $('desc').value.trim() });
+
+// Берёт шаблон и заменяет метки-чипы на значения полей (или заглушку). Возвращает DOM-контейнер.
+// forExport=true — без серого курсива у заглушек.
+function renderDom(forExport) {
+  const v = readValues(), root = document.createElement('div');
+  root.innerHTML = settings.tpl;
+  root.querySelectorAll('[data-tok]').forEach(el => {
+    const x = v[el.dataset.tok], sp = document.createElement('span');
+    sp.textContent = x || settings.emptyText;
+    if (!x && !forExport) sp.className = 'ph';
+    if (settings.boldValues) sp.style.fontWeight = '700';
+    el.replaceWith(sp);
+  });
+  return root;
+}
+function updatePreview() {
+  const el = $('preview'), s = settings;
+  el.style.cssText = `font-family:"${s.fontFamily}",serif;font-size:${s.fontSize}pt;line-height:${s.lineHeight}`;
+  el.innerHTML = renderDom(false).innerHTML;
+}
+
+/* ---------- 3. Проверка полей и вспомогательное ---------- */
+const NAMES = { num: 'Номер заявки', date: 'Дата', service: 'Наименование услуги', desc: 'Краткое описание предмета заявки' };
+function validate() {
+  const raw = { num: $('num').value.trim(), date: $('date').value, service: $('service').value, desc: $('desc').value.trim() };
+  const missing = Object.keys(raw).filter(k => !raw[k]);
+  Object.keys(NAMES).forEach(k => {
+    $(k).classList.toggle('invalid', missing.includes(k));
+    document.querySelector(`[data-err="${k}"]`).textContent = missing.includes(k) ? 'Обязательное поле' : '';
+  });
+  if (missing.length === 4) return 'Документ пуст. Заполните все поля формы, чтобы скачать файл.';
+  return missing.length ? 'Заполните обязательные поля: ' + missing.map(k => NAMES[k]).join(', ') + '.' : '';
+}
+const showMsg = t => $('msg').textContent = t;
+let tt;
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), 2500); }
+const fileName = ext => `Заявка_${($('num').value.trim().replace(/[^\wА-Яа-яЁё-]+/g, '_') || 'bez-nomera')}.${ext}`;
+function saveBlob(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ---------- 4. Экспорт в Word (.docx) ---------- */
+// .docx — zip с XML. Обходим подставленный DOM и переводим форматирование (Ж/К/Ч, размер, выравнивание) в OOXML.
+const xe = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const mmTw = mm => Math.round(mm * 56.7);
+const toMm = s => { const n = parseFloat(s); return !n ? 0 : /pt/.test(s) ? n * .3528 : /px/.test(s) ? n * .2646 : n; };
+const toPt = s => { const n = parseFloat(s); return !n ? 0 : /px/.test(s) ? n * .75 : n; };
+
+function collectRuns(node, st, out) {
+  node.childNodes.forEach(ch => {
+    if (ch.nodeType === 3) { out.push({ t: ch.textContent, ...st }); return; }
+    if (ch.nodeType !== 1) return;
+    if (ch.tagName === 'BR') { out.push({ br: true }); return; }
+    const s = { ...st }, css = ch.style;
+    if (/^(B|STRONG)$/.test(ch.tagName) || css.fontWeight === 'bold' || +css.fontWeight >= 600) s.b = true;
+    if (/^(I|EM)$/.test(ch.tagName) || css.fontStyle === 'italic') s.i = true;
+    if (ch.tagName === 'U' || /underline/.test(css.textDecoration + css.textDecorationLine)) s.u = true;
+    if (css.fontSize) s.sz = toPt(css.fontSize);
+    collectRuns(ch, s, out);
+  });
+}
+function buildDocumentXml() {
+  const s = settings, font = xe(s.fontFamily), root = renderDom(true);
+  const paras = [...root.children].map(el => {
+    const runs = []; collectRuns(el, { sz: toPt(el.style.fontSize) || 0 }, runs);
+    if (!runs.some(r => r.t && r.t.trim())) return '<w:p/>';
+    const al = el.style.textAlign || el.align || 'left', jc = { center: 'center', right: 'right', justify: 'both' }[al] || 'left';
+    const ind = toMm(el.style.textIndent);
+    const pPr = `<w:pPr><w:spacing w:after="120" w:line="${Math.round(s.lineHeight * 240)}" w:lineRule="auto"/>` +
+      (ind ? `<w:ind w:firstLine="${mmTw(ind)}"/>` : '') + `<w:jc w:val="${jc}"/></w:pPr>`;
+    const rs = runs.map(r => {
+      if (r.br) return '<w:r><w:br/></w:r>';
+      const rPr = `<w:rPr><w:rFonts w:ascii="${font}" w:hAnsi="${font}" w:cs="${font}"/>${r.b ? '<w:b/>' : ''}${r.i ? '<w:i/>' : ''}${r.u ? '<w:u w:val="single"/>' : ''}<w:sz w:val="${Math.round((r.sz || s.fontSize) * 2)}"/></w:rPr>`;
+      return `<w:r>${rPr}<w:t xml:space="preserve">${xe(r.t)}</w:t></w:r>`;
+    }).join('');
+    return `<w:p>${pPr}${rs}</w:p>`;
+  }).join('');
+  const m = mmTw(s.marginMm);
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + paras +
+    `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="${m}" w:right="${m}" w:bottom="${m}" w:left="${m}" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+}
+async function exportDocx() {
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+  zip.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  zip.file('word/document.xml', buildDocumentXml());
+  saveBlob(await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), fileName('docx'));
+}
+
+/* ---------- 5. Экспорт в PDF ---------- */
+// Причина прежнего пустого PDF: исходный элемент имел position:absolute и z-index:-1 — html2pdf копирует
+// эти стили в свой белый контейнер, и текст оказывался ПОД белым фоном. Теперь элемент без позиционирования
+// лежит в «ширме» за пределами экрана (он должен быть в DOM, чтобы html2pdf измерил ширину).
+async function exportPdf() {
+  const s = settings, wrap = document.createElement('div'), box = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;left:-10000px;top:0;';
+  box.style.cssText = `width:${210 - 2 * s.marginMm}mm;background:#fff;color:#000;font-family:"${s.fontFamily}",serif;font-size:${s.fontSize}pt;line-height:${s.lineHeight};`;
+  box.innerHTML = '<style>p,div{margin:0 0 6pt}</style>' + renderDom(true).innerHTML;
+  wrap.appendChild(box); document.body.appendChild(wrap);
+  try {
+    await html2pdf().set({ margin: s.marginMm, filename: fileName('pdf'), image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(box).save();
+  } finally { wrap.remove(); }
+}
+
+/* ---------- 6. Кнопки скачивания ---------- */
+async function handleDownload(fn) {
+  const err = validate(); showMsg(err); if (err) return;
+  try { await fn(); toast('Файл скачан'); } catch (e) { showMsg('Не удалось создать файл: ' + e.message); }
+}
+$('btnDocx').onclick = () => handleDownload(exportDocx);
+$('btnPdf').onclick = () => handleDownload(exportPdf);
+
+/* ---------- 7. Админка и визуальный редактор ---------- */
+const ed = $('editor');
+function buildAdmin() {
+  $('adminFields').innerHTML = ADMIN_SCHEMA.map(f => {
+    const id = 'adm_' + f.k, val = settings[f.k];
+    if (f.t === 'check') return `<div class="chk"><input type="checkbox" id="${id}" ${val ? 'checked' : ''}><label for="${id}">${f.l}</label></div>`;
+    if (f.t === 'select') return `<div><label for="${id}">${f.l}</label><select id="${id}">${f.o.map(o => `<option ${o === val ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`;
+    const a = f.t === 'number' ? `min="${f.min}" max="${f.max}" step="${f.step}"` : '';
+    return `<div><label for="${id}">${f.l}</label><input id="${id}" type="${f.t}" value="${val}" ${a}></div>`;
+  }).join('');
+  ed.innerHTML = settings.tpl;
+  ed.style.cssText = `font-family:"${settings.fontFamily}",serif;font-size:${settings.fontSize}pt;line-height:${settings.lineHeight}`;
+}
+function collectAdmin() {
+  ADMIN_SCHEMA.forEach(f => { const el = $('adm_' + f.k);
+    settings[f.k] = f.t === 'check' ? el.checked : f.t === 'number' ? (parseFloat(el.value) || DEFAULT_SETTINGS[f.k]) : el.value; });
+  settings.tpl = ed.innerHTML;   // шаблон берём прямо из редактора
+  ed.style.fontFamily = `"${settings.fontFamily}",serif`; ed.style.fontSize = settings.fontSize + 'pt'; ed.style.lineHeight = settings.lineHeight;
+  updatePreview();
+}
+$('adminFields').oninput = $('adminFields').onchange = collectAdmin;
+ed.oninput = collectAdmin;
+
+// Команды форматирования (Ж, К, Ч, выравнивание)
+function cmd(c, v) { ed.focus(); document.execCommand('styleWithCSS', false, true); document.execCommand(c, false, v); collectAdmin(); }
+$('toolbar').onmousedown = e => { if (e.target.tagName !== 'SELECT') e.preventDefault(); };
+$('toolbar').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.cmd) cmd(b.dataset.cmd);
+  if (b.dataset.tok) cmd('insertHTML', chip(b.dataset.tok) + '&nbsp;');   // вставка метки поля в позицию курсора
+};
+// Размер текста: через fontSize=7 помечаем выделение и заменяем на точный размер в pt
+[10, 11, 12, 13, 14, 16, 18, 20].forEach(n => $('sizeSel').insertAdjacentHTML('beforeend', `<option value="${n}">${n} pt</option>`));
+$('sizeSel').onchange = e => {
+  const pt = e.target.value; if (!pt) return;
+  cmd('fontSize', '7');
+  ed.querySelectorAll('font[size="7"],span[style*="xxx-large"]').forEach(f => {
+    if (f.tagName === 'FONT') { const sp = document.createElement('span'); sp.style.fontSize = pt + 'pt'; sp.innerHTML = f.innerHTML; f.replaceWith(sp); }
+    else f.style.fontSize = pt + 'pt';
+  });
+  e.target.value = ''; collectAdmin();
+};
+
+$('adminToggle').onclick = () => {
+  const panel = $('admin');
+  if (!panel.classList.contains('open') && prompt('Пароль администратора:') !== ADMIN_PASSWORD) return;
+  panel.classList.toggle('open');
+};
+$('adminSave').onclick = () => {
+  collectAdmin();
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(settings)); toast('Настройки сохранены'); }
+  catch (e) { showMsg('Не удалось сохранить настройки в браузере.'); }
+};
+$('adminReset').onclick = () => {
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  settings = { ...DEFAULT_SETTINGS }; buildAdmin(); updatePreview();
+};
+$('adminCopy').onclick = async () => {
+  try { await navigator.clipboard.writeText(JSON.stringify(settings, null, 2)); toast('JSON скопирован'); }
+  catch (e) { showMsg('Не удалось скопировать JSON.'); }
+};
+
+/* ---------- 8. Инициализация ---------- */
+(function init() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  $('date').value = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;   // дата по умолчанию — сегодня
+  ['num', 'date', 'service', 'desc'].forEach(id => { $(id).addEventListener('input', updatePreview); $(id).addEventListener('change', updatePreview); });
+  document.execCommand('defaultParagraphSeparator', false, 'p');
+  buildAdmin(); updatePreview();
+})();
+</script>
+</body>
+</html>
